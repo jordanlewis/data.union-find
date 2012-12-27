@@ -39,5 +39,9 @@
   ;;(equals [this o] (or (identical? this o) (.equals elt-map o)))
   )
 
-(defn make-persistent-set []
-  (->PersistentUFSet {}))
+(def ^:private empty-union-find (->PersistentUFSet {}))
+
+(defn union-find
+  "Returns a new union-find data structure with provided elements as singletons"
+  [& xs]
+  (reduce add-singleton empty-union-find xs))
