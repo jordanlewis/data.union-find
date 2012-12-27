@@ -2,6 +2,7 @@
   (:use clojure.test
         jordanlewis.data.union-find))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(deftest singletons
+  (testing "Singleton sets are their own leaders."
+    (is (= 1 (second (get-canonical (union-find 1) 1))))))
+
