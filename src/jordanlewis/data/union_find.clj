@@ -30,19 +30,21 @@
         (let [set (get-canonical this parent)]
           (assoc-in set [0 :elt-map x :parent] (second set))))))
   (connect [this x y]
-    (let [[x-set x-root] (get-canonical this x)
-          [y-set y-root] (get-canonical x-set y)
+    (let [[this x-root] (get-canonical this x)
+          [this y-root] (get-canonical this y)
           ;; update elt-map to be the new one after get-canonical potentially changes it
-          elt-map (:elt-map y-set)
+          elt-map (.elt-map this)
           x-rank (:rank (elt-map x-root))
           y-rank (:rank (elt-map y-root))]
-      (if (= x-root y-root) y-set
-        (cond (< x-rank y-rank) (assoc-in y-set [:elt-map x-root :parent] y-root)
-              (< y-rank x-rank) (assoc-in y-set [:elt-map y-root :parent] x-root)
-              :else (-> y-set
-                      (assoc-in [:elt-map y-root :parent] x-root)
-                      (assoc-in [:elt-map x-root :rank] (inc x-rank)))))))
-  )
+      (if (= x-root y-root) this
+        (cond (< x-rank y-rank) (.PersistentUFSet
+                                  (assoc-in elt-map [x-root :parent]) y-root)
+              (< y-rank x-rank) (.PersistentUFSet
+                                  (assoc-in elt-map [y-root :parent]) x-root)
+              :else (.PersistentUFSet
+                      (-> elt-map
+                        (assoc-in [y-root :parent] x-root)
+                        (assoc-in [x-root :rank] (inc x-rank)))))))))
 
 (def ^:private empty-union-find (->PersistentUFSet {}))
 
