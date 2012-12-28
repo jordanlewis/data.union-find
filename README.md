@@ -21,6 +21,20 @@ the canonical element of an element:
     user=> (get-canonical uf 3)
     [{2 [3 2]} 2]
 
+You can use a union-find data structure as a function like you would a map. The
+result is nil if the element hasn't been added, or the element's canonical element
+if it has. It does not perform the path compression optimization, and just returns
+the canonical element.
+
+    user=> (uf 3)
+    2
+
+    user=> (uf 10)
+    nil
+
+    user=> (uf 10 :not-found)
+    :not-found
+
 
 ## License
 
