@@ -27,8 +27,9 @@
   (get-canonical [this x]
     (let [parent (:parent (elt-map x))]
       (if (= parent nil) [this x]
-        (let [set (get-canonical this parent)]
-          (assoc-in set [0 :elt-map x :parent] (second set))))))
+        (let [[set canonical] (get-canonical this parent)
+              elt-map (.elt-map set)]
+          [(PersistentUFSet. (assoc-in elt-map [x :parent] canonical)) canonical]))))
   (connect [this x y]
     (let [[this x-root] (get-canonical this x)
           [this y-root] (get-canonical this y)
@@ -37,11 +38,11 @@
           x-rank (:rank (elt-map x-root))
           y-rank (:rank (elt-map y-root))]
       (if (= x-root y-root) this
-        (cond (< x-rank y-rank) (.PersistentUFSet
-                                  (assoc-in elt-map [x-root :parent]) y-root)
-              (< y-rank x-rank) (.PersistentUFSet
-                                  (assoc-in elt-map [y-root :parent]) x-root)
-              :else (.PersistentUFSet
+        (cond (< x-rank y-rank) (PersistentUFSet.
+                                  (assoc-in elt-map [x-root :parent] y-root))
+              (< y-rank x-rank) (PersistentUFSet.
+                                  (assoc-in elt-map [y-root :parent] x-root))
+              :else (PersistentUFSet.
                       (-> elt-map
                         (assoc-in [y-root :parent] x-root)
                         (assoc-in [x-root :rank] (inc x-rank)))))))))
