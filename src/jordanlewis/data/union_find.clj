@@ -15,7 +15,9 @@
   (toString [this] (str (group-by this (keys elt-map))))
 
   clojure.lang.IPersistentCollection
+  ;; count returns the number of disjoint sets, not the number of total elements
   (count [this] (num-sets))
+  ;; cons adds the input to a new singleton set
   (cons [this x]
     (if (elt-map x)
       this
@@ -24,11 +26,14 @@
   (equiv [this that] (.equals this that))
   (hashCode [this] (.hashCode elt-map))
   (equals [this that] (or (identical? this that) (.equals elt-map that)))
+  ;; seq returns each of the canonical elements, not all of the elements
   (seq [this]
     (seq (filter #(nil? (:parent (second %))) elt-map)))
 
   clojure.lang.ILookup
-  ;; gets the canonical element of the key without path compression
+  ;; valAt gets the canonical element of the key without path compression
+  ;; TODO rewrite to be tail recursive, don't need to waste stack space remembering
+  ;; the path compressions since we're going to throw them away anyway.
   (valAt [this k] (second (get-canonical this k)))
   (valAt [this k not-found]
     (let [ret (get-canonical this k)]
@@ -36,10 +41,12 @@
         (second ret))))
 
   clojure.lang.IFn
+  ;; invoking as function behaves like valAt.
   (invoke [this k] (.valAt this k))
   (invoke [this k not-found] (.valAt this k not-found))
 
   clojure.lang.IObj
+  ;; implementing IObj gives us meta
   (meta [this] _meta)
   (withMeta [this meta] (PersistentUFSet. elt-map num-sets meta))
 
