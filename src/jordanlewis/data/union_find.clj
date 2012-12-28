@@ -36,8 +36,8 @@
         (second ret))))
 
   clojure.lang.IFn
-  (invoke [this k] (.valAt this))
-  (invoke [this k not-found] (.valAt this not-found))
+  (invoke [this k] (.valAt this k))
+  (invoke [this k not-found] (.valAt this k not-found))
 
   DisjointSet
   (get-canonical [this x]
