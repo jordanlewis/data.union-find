@@ -23,6 +23,13 @@
   (seq [this]
     (seq (filter #(nil? (:parent (second %))) elt-map)))
 
+  clojure.lang.IFn
+  (invoke [this k] (second (get-canonical this k)))
+  (invoke [this k not-found]
+    (let [ret (get-canonical this k)]
+      (if (nil? ret) not-found
+        (second ret))))
+
   DisjointSet
   (get-canonical [this x]
     (let [parent (:parent (elt-map x))]
