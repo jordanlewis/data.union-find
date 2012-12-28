@@ -9,7 +9,7 @@
 
 (declare empty-union-find)
 
-(deftype PersistentUFSet [elt-map num-sets]
+(deftype PersistentUFSet [elt-map num-sets _meta]
   Object
   ;; prints out a map from canonical element to elements connected to that element.
   (toString [this] (str (group-by this (keys elt-map))))
@@ -19,7 +19,7 @@
   (cons [this x]
     (if (elt-map x)
       this
-      (PersistentUFSet. (assoc elt-map x (->UFNode x 0 nil)) (inc num-sets))))
+      (PersistentUFSet. (assoc elt-map x (->UFNode x 0 nil)) (inc num-sets) _meta)))
   (empty [this] empty-union-find)
   (equiv [this that] (.equals this that))
   (hashCode [this] (.hashCode elt-map))
@@ -39,6 +39,10 @@
   (invoke [this k] (.valAt this k))
   (invoke [this k not-found] (.valAt this k not-found))
 
+  clojure.lang.IObj
+  (meta [this] _meta)
+  (withMeta [this meta] (PersistentUFSet. elt-map num-sets meta))
+
   DisjointSet
   (get-canonical [this x]
     (let [node (elt-map x)
@@ -48,7 +52,8 @@
         (= parent nil) [this x]
         :else (let [[set canonical] (get-canonical this parent)
                     elt-map (.elt-map set)]
-                [(PersistentUFSet. (assoc-in elt-map [x :parent] canonical) num-sets)
+                [(PersistentUFSet. (assoc-in elt-map [x :parent] canonical)
+                                   num-sets _meta)
                  canonical]))))
   (connect [this x y]
     (let [[this x-root] (get-canonical this x)
@@ -60,18 +65,20 @@
           new-num-sets (inc num-sets)]
       (cond (= x-root y-root) this
             (< x-rank y-rank) (PersistentUFSet.
-                                (assoc-in elt-map [x-root :parent] y-root) new-num-sets)
+                                (assoc-in elt-map [x-root :parent] y-root)
+                                new-num-sets _meta)
             (< y-rank x-rank) (PersistentUFSet.
-                                (assoc-in elt-map [y-root :parent] x-root) new-num-sets)
+                                (assoc-in elt-map [y-root :parent] x-root)
+                                new-num-sets _meta)
             :else (PersistentUFSet.
                     (-> elt-map
                       (transient)
                       (assoc! y-root (assoc (elt-map y-root) :parent x-root))
                       (assoc! x-root (assoc (elt-map x-root) :rank (inc x-rank)))
                       (persistent!))
-                    new-num-sets)))))
+                    new-num-sets _meta)))))
 
-(def ^:private empty-union-find (->PersistentUFSet {} 0))
+(def ^:private empty-union-find (->PersistentUFSet {} 0 {}))
 
 (defn union-find
   "Returns a new union-find data structure with provided elements as singletons"

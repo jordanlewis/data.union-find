@@ -45,4 +45,7 @@
       (is (= nil (set 10)))
       (is (= :not-found (set 10 :not-found))))
 
+    (testing "supports meta"
+      (is (= {:with :meta} (meta (with-meta set {:with :meta})))))
+
     (testing "More map equalities")))
