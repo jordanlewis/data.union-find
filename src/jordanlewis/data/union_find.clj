@@ -2,16 +2,28 @@
 
 (defprotocol DisjointSet
   "A data structure that maintains informations on a number of disjoint sets."
-  (add-singleton [this x] "Add the element x to a new singleton set")
   (connect [this x y] "Union the sets that x and y are in")
   (get-canonical [this x] "Return the canonical element of the set x is in"))
 
 (defrecord UFNode [value rank parent])
 
-(defrecord PersistentUFSet [elt-map]
+(declare empty-union-find)
+
+(deftype PersistentUFSet [elt-map]
+  clojure.lang.IPersistentCollection
+  (count [this] (count elt-map))
+  (cons [this x]
+    (if (elt-map x)
+      this
+      (PersistentUFSet. (assoc elt-map x (->UFNode x 0 nil)))))
+  (empty [this] empty-union-find)
+  (equiv [this that] (.equals this that))
+  (hashCode [this] (.hashCode elt-map))
+  (equals [this that] (or (identical? this that) (.equals elt-map that)))
+  (seq [this]
+    (seq (filter #(nil? (:parent (second %))) elt-map)))
+
   DisjointSet
-  (add-singleton [this x]
-    (assoc-in this [:elt-map x] (->UFNode x 0 nil)))
   (get-canonical [this x]
     (let [parent (:parent (elt-map x))]
       (if (= parent nil) [this x]
@@ -30,13 +42,6 @@
               :else (-> y-set
                       (assoc-in [:elt-map y-root :parent] x-root)
                       (assoc-in [:elt-map x-root :rank] (inc x-rank)))))))
-  ;;clojure.lang.IPersistentCollection
-  ;;(count [this] (count elt-map))
-  ;;(cons [this e] (add-singleton this e))
-  ;;(empty [this] (make-persistent-set))
-  ;;(equiv [this o] (.equiv elt-map o))
-  ;;(hashCode [this] (.hashCode elt-map))
-  ;;(equals [this o] (or (identical? this o) (.equals elt-map o)))
   )
 
 (def ^:private empty-union-find (->PersistentUFSet {}))
@@ -44,4 +49,4 @@
 (defn union-find
   "Returns a new union-find data structure with provided elements as singletons"
   [& xs]
-  (reduce add-singleton empty-union-find xs))
+  (reduce conj empty-union-find xs))
