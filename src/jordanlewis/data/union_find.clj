@@ -11,6 +11,7 @@
 
 (deftype PersistentUFSet [elt-map num-sets]
   Object
+  ;; prints out a map from canonical element to elements connected to that element.
   (toString [this] (str (group-by this (keys elt-map))))
 
   clojure.lang.IPersistentCollection
@@ -26,12 +27,17 @@
   (seq [this]
     (seq (filter #(nil? (:parent (second %))) elt-map)))
 
-  clojure.lang.IFn
-  (invoke [this k] (second (get-canonical this k)))
-  (invoke [this k not-found]
+  clojure.lang.ILookup
+  ;; gets the canonical element of the key without path compression
+  (valAt [this k] (second (get-canonical this k)))
+  (valAt [this k not-found]
     (let [ret (get-canonical this k)]
       (if (nil? ret) not-found
         (second ret))))
+
+  clojure.lang.IFn
+  (invoke [this k] (.valAt this))
+  (invoke [this k not-found] (.valAt this not-found))
 
   DisjointSet
   (get-canonical [this x]
