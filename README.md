@@ -33,14 +33,12 @@ the canonical element.
     2
     user=> (get uf 3)
     2
-
     user=> (uf 10)
     nil
-
     user=> (uf 10 :not-found)
     :not-found
 
-You can add new elements to the data structure with conj:
+You can add new elements to the data structure as singleton sets with conj:
 
     user=> (conj uf 8)
     {8 [8], 5 [5], 4 [4], 2 [3 2], 1 [1]}
