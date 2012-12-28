@@ -10,6 +10,9 @@
 (declare empty-union-find)
 
 (deftype PersistentUFSet [elt-map num-sets]
+  Object
+  (toString [this] (str (group-by this (keys elt-map))))
+
   clojure.lang.IPersistentCollection
   (count [this] (num-sets))
   (cons [this x]
