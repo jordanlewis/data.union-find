@@ -48,4 +48,8 @@
     (testing "supports meta"
       (is (= {:with :meta} (meta (with-meta set {:with :meta})))))
 
+    (testing "equality works right"
+      (is (= set set))
+      (is (= (connect set 5 6) (connect set 6 5))))
+
     (testing "More map equalities")))

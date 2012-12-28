@@ -25,7 +25,7 @@
   (empty [this] empty-union-find)
   (equiv [this that] (.equals this that))
   (hashCode [this] (.hashCode elt-map))
-  (equals [this that] (or (identical? this that) (.equals elt-map that)))
+  (equals [this that] (or (identical? this that) (.equals elt-map (.elt-map that))))
   ;; seq returns each of the canonical elements, not all of the elements
   (seq [this]
     (seq (filter #(nil? (:parent (second %))) elt-map)))
