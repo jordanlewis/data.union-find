@@ -10,24 +10,30 @@ Make a new union-find data structure containing its arguments as singleton sets:
     user=> uf
     {5 [5], 4 [4], 3 [3], 2 [2], 1 [1]}
 
+Add a new element as a singleton set with conj or cons:
+
+    user=> (conj uf 8)
+    {8 [8], 5 [5], 4 [4], 2 [3 2], 1 [1]}
+
 Union two sets:
 
     user=> (def uf (connect uf 2 3))
     user=> uf
     {5 [5], 4 [4], 2 [3 2], 1 [1]}
 
-Getting the canonical element of a set can change the internals of the data structure,
-due to an optimization called path compression. Therefore, get-canonical returns two
-objects: the updated data structure, and the requested canonical element. Get
-the canonical element of an element:
+Look up the canonical element for an element:
 
     user=> (get-canonical uf 3)
     [{5 [5], 4 [4], 2 [3 2], 1 [1]} 2]
 
-You can use a union-find data structure as a function like you would a map. The
-result is nil if the element hasn't been added, or the element's canonical element
-if it has. It does not perform the path compression optimization, and just returns
-the canonical element.
+Getting the canonical element of a set can change the internals of the data structure,
+due to an optimization called path compression. Therefore, get-canonical returns two
+objects: the updated data structure, and the requested canonical element.
+
+union-find also implements ILookup and IFn as canonical element lookups, so you
+can use get on it or apply it to an element like you would with a vector or a
+map. Using it this way doesn't perform the path compression optimization, and
+just returns the canonical element.
 
     user=> (uf 3)
     2
@@ -37,11 +43,6 @@ the canonical element.
     nil
     user=> (uf 10 :not-found)
     :not-found
-
-You can add new elements to the data structure as singleton sets with conj:
-
-    user=> (conj uf 8)
-    {8 [8], 5 [5], 4 [4], 2 [3 2], 1 [1]}
 
 
 ## License
