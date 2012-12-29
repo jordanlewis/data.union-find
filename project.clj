@@ -1,4 +1,4 @@
-(defproject org.jordanlewis/data.union-find "0.1.0-SNAPSHOT"
+(defproject org.jordanlewis/data.union-find "0.1.0"
   :description "Persistent disjoint-set forests using Tarjan's union-find algorithm."
   :url "http://github.com/jordanlewis/data.union-find"
   :license {:name "Eclipse Public License"
