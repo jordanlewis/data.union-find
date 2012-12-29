@@ -36,9 +36,8 @@
   ;; the path compressions since we're going to throw them away anyway.
   (valAt [this k] (second (get-canonical this k)))
   (valAt [this k not-found]
-    (let [ret (get-canonical this k)]
-      (if (nil? ret) not-found
-        (second ret))))
+    (let [[newset ret] (get-canonical this k)]
+      (if (nil? ret) not-found ret)))
 
   clojure.lang.IFn
   ;; invoking as function behaves like valAt.
@@ -55,7 +54,7 @@
     (let [node (elt-map x)
           parent (:parent node)]
       (cond
-        (= node nil) nil
+        (= node nil) [this nil]
         (= parent nil) [this x]
         :else (let [[set canonical] (get-canonical this parent)
                     elt-map (.elt-map set)]

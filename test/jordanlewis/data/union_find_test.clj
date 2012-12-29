@@ -7,6 +7,8 @@
                 (connect 1 2)
                 (connect 3 4)
                 (connect 4 5))]
+    (testing "Missing elements have nil leaders."
+      (is (= [set nil] (get-canonical set 10))))
     (testing "Singleton sets are their own leaders."
       (is (= 6 (second (get-canonical set 6)))))
     (testing "Singleton sets unioned with themselves are still their own leaders."
