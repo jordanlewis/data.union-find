@@ -17,7 +17,7 @@ Add a new element as a singleton set with conj or cons:
 
 Union two sets:
 
-    user=> (def uf (connect uf 2 3))
+    user=> (def uf (union uf 2 3))
     user=> uf
     {5 [5], 4 [4], 2 [3 2], 1 [1]}
 

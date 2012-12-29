@@ -4,19 +4,19 @@
 
 (deftest test-union-find
   (let [set (-> (union-find 1 2 3 4 5 6)
-                (connect 1 2)
-                (connect 3 4)
-                (connect 4 5))]
+                (union 1 2)
+                (union 3 4)
+                (union 4 5))]
     (testing "Missing elements have nil leaders."
       (is (= [set nil] (get-canonical set 10))))
     (testing "Singleton sets are their own leaders."
       (is (= 6 (second (get-canonical set 6)))))
     (testing "Singleton sets unioned with themselves are still their own leaders."
-      (is (= 6 (second (get-canonical (connect set 6 6) 6)))))
+      (is (= 6 (second (get-canonical (union set 6 6) 6)))))
     (testing "Unioning from both sides of size works as expected"
-      (let [set (connect set 1 3)
-            set-left  (connect set 1 4)
-            set-right (connect set 4 1)]
+      (let [set (union set 1 3)
+            set-left  (union set 1 4)
+            set-right (union set 4 1)]
         (is (= 1 (set-left  1)))
         (is (= 1 (set-right 1)))))
     (testing "Connected singletons have the same leader."
@@ -29,7 +29,7 @@
         (is (= c d))
         (is (= c e))
         (is (not= b c))
-        (let [set (connect set 2 3)
+        (let [set (union set 2 3)
               [set a] (get-canonical set 1)
               [set c] (get-canonical set 3)]
           (is (= a c 1)))))
@@ -39,7 +39,7 @@
       (let [set (conj set 7)]
         (is (= 4 (count set)))
         (is (= 7 (set 7)))
-        (is (= 6 ((connect set 6 7) 7)))))
+        (is (= 6 ((union set 6 7) 7)))))
 
     (testing "union-find is gettable"
       (is (= 1 (get set 2)))
@@ -58,7 +58,7 @@
 
     (testing "equality works right"
       (is (= set set))
-      (is (= (connect set 5 6) (connect set 6 5))))
+      (is (= (union set 5 6) (union set 6 5))))
 
-    (testing "connecting a missing element is a no-op."
-      (is (= set (connect set 5 10))))))
+    (testing "unioning a missing element is a no-op."
+      (is (= set (union set 5 10))))))

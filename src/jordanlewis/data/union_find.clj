@@ -2,7 +2,7 @@
 
 (defprotocol DisjointSet
   "A data structure that maintains informations on a number of disjoint sets."
-  (connect [this x y] "Union the sets that x and y are in")
+  (union [this x y] "Union the sets that x and y are in")
   (get-canonical [this x] "Return the canonical element of the set x is in"))
 
 (defrecord UFNode [value rank parent])
@@ -11,7 +11,7 @@
 
 (deftype PersistentUFSet [elt-map num-sets _meta]
   Object
-  ;; prints out a map from canonical element to elements connected to that element.
+  ;; prints out a map from canonical element to elements unioned to that element.
   (toString [this] (str (group-by this (keys elt-map))))
 
   clojure.lang.IPersistentCollection
@@ -61,7 +61,7 @@
                 [(PersistentUFSet. (assoc-in elt-map [x :parent] canonical)
                                    num-sets _meta)
                  canonical]))))
-  (connect [this x y]
+  (union [this x y]
     (let [[newset x-root] (get-canonical this x)
           [newset y-root] (get-canonical newset y)
           ;; update elt-map to be the new one after get-canonical potentially changes it
