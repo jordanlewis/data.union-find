@@ -13,6 +13,12 @@
       (is (= 6 (second (get-canonical set 6)))))
     (testing "Singleton sets unioned with themselves are still their own leaders."
       (is (= 6 (second (get-canonical (connect set 6 6) 6)))))
+    (testing "Unioning from both sides of size works as expected"
+      (let [set (connect set 1 3)
+            set-left  (connect set 1 4)
+            set-right (connect set 4 1)]
+        (is (= 1 (set-left  1)))
+        (is (= 1 (set-right 1)))))
     (testing "Connected singletons have the same leader."
       (let [[set a] (get-canonical set 1)
             [set b] (get-canonical set 2)
@@ -55,6 +61,4 @@
       (is (= (connect set 5 6) (connect set 6 5))))
 
     (testing "connecting a missing element is a no-op."
-      (is (= set (connect set 5 10))))
-
-    (testing "More map equalities")))
+      (is (= set (connect set 5 10))))))
