@@ -62,14 +62,15 @@
                                    num-sets _meta)
                  canonical]))))
   (connect [this x y]
-    (let [[this x-root] (get-canonical this x)
-          [this y-root] (get-canonical this y)
+    (let [[newset x-root] (get-canonical this x)
+          [newset y-root] (get-canonical newset y)
           ;; update elt-map to be the new one after get-canonical potentially changes it
-          elt-map (.elt-map this)
+          elt-map (.elt-map newset)
           x-rank (:rank (elt-map x-root))
           y-rank (:rank (elt-map y-root))
           new-num-sets (inc num-sets)]
-      (cond (= x-root y-root) this
+      (cond (or (nil? x-root) (nil? y-root)) newset
+            (= x-root y-root) newset
             (< x-rank y-rank) (PersistentUFSet.
                                 (assoc-in elt-map [x-root :parent] y-root)
                                 new-num-sets _meta)

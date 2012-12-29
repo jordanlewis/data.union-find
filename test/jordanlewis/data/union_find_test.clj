@@ -54,4 +54,7 @@
       (is (= set set))
       (is (= (connect set 5 6) (connect set 6 5))))
 
+    (testing "connecting a missing element is a no-op."
+      (is (= set (connect set 5 10))))
+
     (testing "More map equalities")))
