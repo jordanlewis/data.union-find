@@ -95,6 +95,6 @@ nil if no such element exists in the forest."))
 (def ^:private empty-union-find (->PersistentDSF {} 0 {}))
 
 (defn union-find
-  "Returns a new union-find data structure with provided elements as singletons"
+  "Returns a new union-find data structure with provided elements as singletons."
   [& xs]
   (reduce conj empty-union-find xs))
