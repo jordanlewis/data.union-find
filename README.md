@@ -1,6 +1,7 @@
 # data.union-find
 
-A Clojure implementation of the Union-Find data structure.
+A Clojure implementation of persistent disjoint-set forests using Tarjan's
+union-find algorithm.
 
 ## Usage
 

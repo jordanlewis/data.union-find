@@ -1,5 +1,5 @@
 (ns
-  ^{:doc "Persistent disjoint set forests."
+  ^{:doc "Persistent disjoint set forests using Tarjan's union-find algorithm."
     :author "Jordan Lewis"}
   jordanlewis.data.union-find)
 
