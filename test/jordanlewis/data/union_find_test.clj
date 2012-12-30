@@ -58,6 +58,7 @@
 
     (testing "equality works right"
       (is (= set set))
+      (is (not= set (conj set 8)))
       (is (= (union set 5 6) (union set 6 5))))
 
     (testing "unioning a missing element is a no-op."
