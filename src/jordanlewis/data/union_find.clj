@@ -1,4 +1,7 @@
-(ns jordanlewis.data.union-find)
+(ns
+  ^{:doc "Persistent disjoint set forests."
+    :author "Jordan Lewis"}
+  jordanlewis.data.union-find)
 
 (defprotocol DisjointSet
   "A data structure that maintains informations on a number of disjoint sets."
