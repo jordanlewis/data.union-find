@@ -70,10 +70,12 @@ nil if no such element exists in the forest."))
       (cond
         (= node nil) [this nil]
         (= parent nil) [this x]
+        ;; path compression. set the parent of each node on the path we take
+        ;; to the root that we find.
         :else (let [[set canonical] (get-canonical this parent)
                     elt-map (.elt-map set)]
                 [(PersistentDSF. (assoc-in elt-map [x :parent] canonical)
-                                   num-sets _meta)
+                                 num-sets _meta)
                  canonical]))))
   (union [this x y]
     (let [[newset x-root] (get-canonical this x)
@@ -84,8 +86,9 @@ nil if no such element exists in the forest."))
           num-sets (dec num-sets)
           x-rank (:rank (elt-map x-root))
           y-rank (:rank (elt-map y-root))]
-      (cond (or (nil? x-root) (nil? y-root)) newset
-            (= x-root y-root) newset
+      (cond (or (nil? x-root) ;; no-op - either the input doesn't exist in the
+                (nil? y-root) ;; universe, or the two inputs are already unioned
+                (= x-root y-root)) newset
             (< x-rank y-rank) (PersistentDSF.
                                 (assoc-in elt-map [x-root :parent] y-root)
                                 num-sets _meta)
