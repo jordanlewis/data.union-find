@@ -20,10 +20,15 @@ nil if no such element exists in the forest."))
   Object
   ;; prints out a map from canonical element to elements unioned to that element.
   (toString [this] (str (group-by this (keys elt-map))))
+  (hashCode [this] (.hashCode elt-map))
+  (equals [this that] (or (identical? this that) (.equals elt-map (.elt-map that))))
+
+  clojure.lang.Seqable
+  ;; seq returns each of the canonical elements, not all of the elements
+  (seq [this]
+    (seq (filter #(nil? (:parent (second %))) elt-map)))
 
   clojure.lang.IPersistentCollection
-  ;; count returns the number of disjoint sets, not the number of total elements
-  (count [this] (num-sets))
   ;; cons adds the input to a new singleton set
   (cons [this x]
     (if (elt-map x)
@@ -31,11 +36,10 @@ nil if no such element exists in the forest."))
       (PersistentDSF. (assoc elt-map x (->UFNode x 0 nil)) (inc num-sets) _meta)))
   (empty [this] empty-union-find)
   (equiv [this that] (.equals this that))
-  (hashCode [this] (.hashCode elt-map))
-  (equals [this that] (or (identical? this that) (.equals elt-map (.elt-map that))))
-  ;; seq returns each of the canonical elements, not all of the elements
-  (seq [this]
-    (seq (filter #(nil? (:parent (second %))) elt-map)))
+
+  ;; count returns the number of disjoint sets, not the number of total elements
+  clojure.lang.Counted
+  (count [this] num-sets)
 
   clojure.lang.ILookup
   ;; valAt gets the canonical element of the key without path compression
@@ -53,9 +57,10 @@ nil if no such element exists in the forest."))
   (invoke [this k] (.valAt this k))
   (invoke [this k not-found] (.valAt this k not-found))
 
-  clojure.lang.IObj
+  clojure.lang.IMeta
   ;; implementing IObj gives us meta
   (meta [this] _meta)
+  clojure.lang.IObj
   (withMeta [this meta] (PersistentDSF. elt-map num-sets meta))
 
   DisjointSetForest
@@ -73,26 +78,27 @@ nil if no such element exists in the forest."))
   (union [this x y]
     (let [[newset x-root] (get-canonical this x)
           [newset y-root] (get-canonical newset y)
-          ;; update elt-map to be the new one after get-canonical potentially changes it
+          ;; update elt-map to be the new one after get-canonical potentially
+          ;; changes it, and decrement num-sets since 2 sets are joining
           elt-map (.elt-map newset)
+          num-sets (dec num-sets)
           x-rank (:rank (elt-map x-root))
-          y-rank (:rank (elt-map y-root))
-          new-num-sets (inc num-sets)]
+          y-rank (:rank (elt-map y-root))]
       (cond (or (nil? x-root) (nil? y-root)) newset
             (= x-root y-root) newset
             (< x-rank y-rank) (PersistentDSF.
                                 (assoc-in elt-map [x-root :parent] y-root)
-                                new-num-sets _meta)
+                                num-sets _meta)
             (< y-rank x-rank) (PersistentDSF.
                                 (assoc-in elt-map [y-root :parent] x-root)
-                                new-num-sets _meta)
+                                num-sets _meta)
             :else (PersistentDSF.
                     (-> elt-map
                       (transient)
                       (assoc! y-root (assoc (elt-map y-root) :parent x-root))
                       (assoc! x-root (assoc (elt-map x-root) :rank (inc x-rank)))
                       (persistent!))
-                    new-num-sets _meta)))))
+                    num-sets _meta)))))
 
 (def ^:private empty-union-find (->PersistentDSF {} 0 {}))
 

@@ -33,11 +33,15 @@
               [set a] (get-canonical set 1)
               [set c] (get-canonical set 3)]
           (is (= a c 1)))))
+    (testing "Seq returns only leader elements"
+      (is (= 3 (count (seq set)))))
     (testing "Count counts the number of connected components."
-      (is (= 3 (count set))))
+      (is (= 3 (count set)))
+      (is (= 2 (count (union set 1 3)))))
     (testing "Conj adds new singletons"
       (let [set (conj set 7)]
         (is (= 4 (count set)))
+        (is (= 3 (count (union set 6 7))))
         (is (= 7 (set 7)))
         (is (= 6 ((union set 6 7) 7)))))
 
