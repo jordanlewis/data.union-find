@@ -31,6 +31,18 @@ Getting the canonical element of a set can change the internals of the data stru
 due to an optimization called path compression. Therefore, get-canonical returns two
 objects: the updated data structure, and the requested canonical element.
 
+Getting the count of a union-find data structure returns the number of connected
+components, not the number of elements. count is a constant-time operation.
+
+    user=> (count uf)
+    4 ;; 4 connected components, but 5 elements
+
+Treating a union-find data structure as a seq similiarly returns only the
+canonical elements of the data structure, not all of the elements:
+
+    user=> (seq uf)
+    (5 4 2 1) ;; doesn't include 3, which is a non-canonical element
+
 union-find also implements ILookup and IFn as canonical element lookups, so you
 can use get on it or apply it to an element like you would with a vector or a
 map. Using it this way doesn't perform the path compression optimization, and
