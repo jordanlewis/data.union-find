@@ -57,8 +57,8 @@ nil if no such element exists in the forest."))
   (invoke [this k] (.valAt this k))
   (invoke [this k not-found] (.valAt this k not-found))
 
+  ;; implementing IMeta and IObj gives us meta
   clojure.lang.IMeta
-  ;; implementing IObj gives us meta
   (meta [this] _meta)
   clojure.lang.IObj
   (withMeta [this meta] (PersistentDSF. elt-map num-sets meta))
