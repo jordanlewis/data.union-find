@@ -34,7 +34,8 @@
               [set c] (get-canonical set 3)]
           (is (= a c 1)))))
     (testing "Seq returns only leader elements"
-      (is (= 3 (count (seq set)))))
+      (is (= 3 (count (seq set))))
+      (is (= #{1 3 6} (into #{} (seq set)))))
     (testing "Count counts the number of connected components."
       (is (= 3 (count set)))
       (is (= 2 (count (union set 1 3)))))
