@@ -39,12 +39,14 @@ nil if no such element exists in the forest."))
 
   clojure.lang.ILookup
   ;; valAt gets the canonical element of the key without path compression
-  ;; TODO rewrite to be tail recursive, don't need to waste stack space remembering
-  ;; the path compressions since we're going to throw them away anyway.
   (valAt [this k] (.valAt this k nil))
   (valAt [this k not-found]
-    (let [[newset ret] (get-canonical this k)]
-      (if (nil? ret) not-found ret)))
+    (loop [x k]
+      (if-let [node (elt-map x)]
+        (if-let [parent (:parent node)]
+          (recur parent)
+          x)
+        not-found)))
 
   clojure.lang.IFn
   ;; invoking as function behaves like valAt.
