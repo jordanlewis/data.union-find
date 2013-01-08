@@ -41,7 +41,7 @@ nil if no such element exists in the forest."))
   ;; valAt gets the canonical element of the key without path compression
   ;; TODO rewrite to be tail recursive, don't need to waste stack space remembering
   ;; the path compressions since we're going to throw them away anyway.
-  (valAt [this k] (second (get-canonical this k)))
+  (valAt [this k] (.valAt this k nil))
   (valAt [this k not-found]
     (let [[newset ret] (get-canonical this k)]
       (if (nil? ret) not-found ret)))
