@@ -11,7 +11,7 @@ Available in Leiningen via [Clojars](https://clojars.org/org.jordanlewis/data.un
 
 Make a new union-find data structure containing its arguments as singleton sets:
 
-    user=> (use 'jordanlewis.data-union-find)
+    user=> (use 'jordanlewis.data.union-find)
     user=> (def uf (union-find 1 2 3 4 5))
     user=> uf
     {5 [5], 4 [4], 3 [3], 2 [2], 1 [1]}
