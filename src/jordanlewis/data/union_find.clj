@@ -44,7 +44,7 @@ sets that x and y belong to unioned."))
   (empty [this] empty-union-find)
   (equiv [this that] (.equals this that))
 
- clojure.lang.IEditableCollection
+  clojure.lang.IEditableCollection
   (asTransient [this]
     (->TransientDSF
      (transient elt-map) num-sets _meta))
