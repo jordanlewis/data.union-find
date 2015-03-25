@@ -22,7 +22,7 @@ sets that x and y belong to unioned."))
   (rank [n])
   (parent [n]))
 
-(defprotocol MutateUFNode
+(defprotocol IMutableUFNode
   (set-rank! [n r])
   (set-parent! [n p]))
 
@@ -45,7 +45,7 @@ sets that x and y belong to unioned."))
   (rank [_] r)
   (parent [_] p)
 
-  MutateUFNode
+  IMutableUFNode
   (set-rank! [n rank]
     (set! r rank))
   (set-parent! [n parent]
@@ -148,14 +148,13 @@ sets that x and y belong to unioned."))
             (< y-rank x-rank) (PersistentDSF.
                                 (update-in elt-map [y-root] #(->UFNode (value %) (rank %) x-root))
                                 num-sets _meta)
-            :else (let []
-                    (PersistentDSF.
-                      (-> elt-map
-                          (transient)
-                          (assoc! y-root (->UFNode (value y-node) (rank y-node) x-root))
-                          (assoc! x-root (->UFNode (value x-node) (inc x-rank) (parent x-node)))
-                          (persistent!))
-                      num-sets _meta)))))
+            :else (PersistentDSF.
+                    (-> elt-map
+                        (transient)
+                        (assoc! y-root (->UFNode (value y-node) (rank y-node) x-root))
+                        (assoc! x-root (->UFNode (value x-node) (inc x-rank) (parent x-node)))
+                        (persistent!))
+                    num-sets _meta))))
 
 
   )
@@ -208,7 +207,7 @@ sets that x and y belong to unioned."))
        ;; path compression. set the parent of each node on the path we take
        ;; to the root that we find.
        :else (let [[_ canonical] (get-canonical this parent)]
-               (do (if (satisfies? MutateUFNode node)
+               (do (if (satisfies? IMutableUFNode node)
                      (set-parent! node canonical)
                      (set! elt-map (assoc! elt-map x (->MutableUFNode (value node) (rank node) canonical))))
                    [this canonical])))))
@@ -228,24 +227,24 @@ sets that x and y belong to unioned."))
                 (= x-root y-root)) this
             (< x-rank y-rank)
             (do
-              (if (satisfies? MutateUFNode x-node)
+              (if (satisfies? IMutableUFNode x-node)
                 (set-parent! x-node y-root)
                 (set! elt-map (assoc! elt-map x-root (->MutableUFNode (value x-node) (rank x-node) y-root))))
               (set! num-sets (dec num-sets))
               this)
             (< y-rank x-rank)
             (do
-              (if (satisfies? MutateUFNode y-node)
+              (if (satisfies? IMutableUFNode y-node)
                 (set-parent! y-node x-root)
                 (set! elt-map (assoc! elt-map y-root (->MutableUFNode (value y-node) (rank y-node) x-root))))
               (set! num-sets (dec num-sets))
               this)
             :else
             (do
-              (if (satisfies? MutateUFNode y-node)
+              (if (satisfies? IMutableUFNode y-node)
                 (set-parent! y-node x-root)
                 (set! elt-map (assoc! elt-map y-root (->MutableUFNode (value y-node) (rank y-node) x-root))))
-              (if (satisfies? MutateUFNode x-node)
+              (if (satisfies? IMutableUFNode x-node)
                 (set-rank! x-node (inc x-rank))
                 (set! elt-map (assoc! elt-map x-root (->MutableUFNode (value x-node) (inc x-rank) (parent x-node)))))
               (set! num-sets (dec num-sets))
