@@ -1,6 +1,7 @@
 (ns jordanlewis.data.union-find-test
   (:use clojure.test
-        jordanlewis.data.union-find))
+        jordanlewis.data.union-find)
+  (:require dev-utils))
 
 (deftest test-union-find
   (let [set (-> (union-find 1 2 3 4 5 6)
@@ -74,6 +75,9 @@
                                   (union 1 2)
                                   (union 3 4)
                                   (union 4 5)))]
+    (testing "equal to persistent"
+      (= (dev-utils/partition-graph (union-find) 10 100 conj union)
+         (persistent! (dev-utils/partition-graph (transient (union-find)) 10 100 conj! union!))))
     (testing "Missing elements have nil leaders."
       (let [set (transient (union-find 1 2 3))]
         (is (= [set nil] (get-canonical set 10)))))
