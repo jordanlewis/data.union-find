@@ -59,6 +59,12 @@
       (is (= nil (set 10)))
       (is (= :not-found (set 10 :not-found))))
 
+    (testing "partitions large dataset correctly"
+      (let [uf (dev-utils/partition-graph (union-find) 10 100 conj union)]
+        (is (= (count uf) 10))
+        (doseq [[a b c] (dev-utils/make-stars 10 100)]
+          (is (= (uf a) (uf b) (uf c))))))
+
     (testing "supports meta"
       (is (= {:with :meta} (meta (with-meta set {:with :meta})))))
 
@@ -76,8 +82,8 @@
                                   (union 3 4)
                                   (union 4 5)))]
     (testing "equal to persistent"
-      (= (dev-utils/partition-graph (union-find) 10 100 conj union)
-         (persistent! (dev-utils/partition-graph (transient (union-find)) 10 100 conj! union!))))
+      (is (= (dev-utils/partition-graph (union-find) 10 100 conj union)
+             (persistent! (dev-utils/partition-graph (transient (union-find)) 10 100 conj! union!)))))
     (testing "Missing elements have nil leaders."
       (let [set (transient (union-find 1 2 3))]
         (is (= [set nil] (get-canonical set 10)))))
