@@ -17,7 +17,52 @@ nil if no such element exists in the forest."))
   (union! [this x y] "Union two sets. Return a mutated disjoint set forest with the
 sets that x and y belong to unioned."))
 
-(defrecord ^:private UFNode [value rank parent])
+(defprotocol IUFNode
+  (value [n])
+  (rank [n])
+  (parent [n])
+  (mutable-node? [n]))
+
+(defprotocol IMutableUFNode
+  (set-immutable! [n])
+  (set-rank! [n r])
+  (set-parent! [n p]))
+
+(deftype ^:private UFNode [v r p]
+  IUFNode
+  (value [_] v)
+  (rank [_] r)
+  (parent [_] p)
+  (mutable-node? [_] false)
+
+  Object
+  (equals [_ o]
+    (boolean (and o
+                  (= v (value o))
+                  (= r (rank o))
+                  (= p (parent o))))))
+
+(deftype ^:private MutableUFNode [v ^:unsynchronized-mutable r ^:unsynchronized-mutable p ^:unsynchronized-mutable m]
+  IUFNode
+  (value [_] v)
+  (rank [_] r)
+  (parent [_] p)
+  (mutable-node? [_] m)
+
+  IMutableUFNode
+  (set-immutable! [_]
+    (set! m false))
+  (set-rank! [n rank]
+    (set! r rank))
+  (set-parent! [n parent]
+    (set! p parent))
+
+  Object
+  (equals [_ o]
+    (boolean (and o
+                  (= v (value o))
+                  (= r (rank o))
+                  (= p (parent o))))))
 
 (declare empty-union-find)
 
@@ -28,12 +73,14 @@ sets that x and y belong to unioned."))
   ;; prints out a map from canonical element to elements unioned to that element.
   (toString [this] (str (group-by this (keys elt-map))))
   (hashCode [this] (.hashCode elt-map))
-  (equals [this that] (or (identical? this that) (.equals elt-map (.elt-map that))))
+  (equals [this that] (or (identical? this that)
+                          (and (instance? PersistentDSF that)
+                               (.equals elt-map (.elt-map that)))))
 
   clojure.lang.Seqable
   ;; seq returns each of the canonical elements, not all of the elements
   (seq [this]
-    (map first (filter (comp nil? :parent val) elt-map)))
+    (map first (filter (comp nil? parent val) elt-map)))
 
   clojure.lang.IPersistentCollection
   ;; cons adds the input to a new singleton set
@@ -59,7 +106,7 @@ sets that x and y belong to unioned."))
   (valAt [this k not-found]
     (loop [x k]
       (if-let [node (elt-map x)]
-        (if-let [parent (:parent node)]
+        (if-let [parent (parent node)]
           (recur parent)
           x)
         not-found)))
@@ -78,7 +125,7 @@ sets that x and y belong to unioned."))
   DisjointSetForest
   (get-canonical [this x]
     (let [node (elt-map x)
-          parent (:parent node)]
+          parent (when node (parent node))]
       (cond
         (= node nil) [this nil]
         (= parent nil) [this x]
@@ -86,7 +133,7 @@ sets that x and y belong to unioned."))
         ;; to the root that we find.
         :else (let [[set canonical] (get-canonical this parent)
                     elt-map (.elt-map set)]
-                [(PersistentDSF. (assoc-in elt-map [x :parent] canonical)
+                [(PersistentDSF. (update-in elt-map [x] #(->UFNode (value %) (rank %) canonical))
                                  num-sets _meta)
                  canonical]))))
   (union [this x y]
@@ -96,35 +143,30 @@ sets that x and y belong to unioned."))
           ;; changes it, and decrement num-sets since 2 sets are joining
           elt-map (.elt-map newset)
           num-sets (dec num-sets)
-          x-rank (:rank (elt-map x-root))
-          y-rank (:rank (elt-map y-root))]
+          x-node (elt-map x-root)
+          y-node (elt-map y-root)
+          x-rank (when x-node (rank x-node))
+          y-rank (when y-node (rank y-node))]
       (cond (or (nil? x-root) ;; no-op - either the input doesn't exist in the
                 (nil? y-root) ;; universe, or the two inputs are already unioned
                 (= x-root y-root)) newset
             (< x-rank y-rank) (PersistentDSF.
-                                (assoc-in elt-map [x-root :parent] y-root)
+                                (update-in elt-map [x-root] #(->UFNode (value %) (rank %) y-root))
                                 num-sets _meta)
             (< y-rank x-rank) (PersistentDSF.
-                                (assoc-in elt-map [y-root :parent] x-root)
+                                (update-in elt-map [y-root] #(->UFNode (value %) (rank %) x-root))
                                 num-sets _meta)
             :else (PersistentDSF.
                     (-> elt-map
-                      (transient)
-                      (assoc! y-root (assoc (elt-map y-root) :parent x-root))
-                      (assoc! x-root (assoc (elt-map x-root) :rank (inc x-rank)))
-                      (persistent!))
-                    num-sets _meta))))
+                        (transient)
+                        (assoc! y-root (->UFNode (value y-node) (rank y-node) x-root))
+                        (assoc! x-root (->UFNode (value x-node) (inc x-rank) (parent x-node)))
+                        (persistent!))
+                    num-sets _meta)))))
 
-
-  )
-
-(deftype TransientDSF [elt-map
+(deftype TransientDSF [^:unsynchronized-mutable elt-map
                        ^:unsynchronized-mutable num-sets
                        meta]
-  Object
-  ;; prints out a map from canonical element to elements unioned to that element.
-  (toString [this] (str (group-by this (keys elt-map))))
-
   clojure.lang.Counted
   (count [this] num-sets)
 
@@ -134,7 +176,7 @@ sets that x and y belong to unioned."))
   (valAt [this k not-found]
     (loop [x k]
       (if-let [node (elt-map x)]
-        (if-let [parent (:parent node)]
+        (if-let [parent (parent node)]
           (recur parent)
           x)
         not-found)))
@@ -148,26 +190,28 @@ sets that x and y belong to unioned."))
   (conj [this x]
     (if (elt-map x)
       this
-      (do (assoc! elt-map x (->UFNode x 0 nil))
+      (do (set! elt-map (assoc! elt-map x (->MutableUFNode x 0 nil true)))
           (set! num-sets (inc num-sets))
-          this)
-      ))
+          this)))
 
   (persistent [this]
-    (PersistentDSF. (persistent! elt-map) num-sets meta))
+    (let [elt-map (persistent! elt-map)]
+      (doseq [node (vals elt-map)] (when (mutable-node? node) (set-immutable! node) ))
+      (PersistentDSF. elt-map num-sets meta)))
 
   DisjointSetForest
   (get-canonical [this x]
     (let [node (elt-map x)
-          parent (:parent node)]
+          parent (when node (parent node))]
       (cond
        (= node nil) [this nil]
        (= parent nil) [this x]
        ;; path compression. set the parent of each node on the path we take
        ;; to the root that we find.
-       :else (let [[_ canonical] (get-canonical this parent)
-                   ]
-               (do (assoc! elt-map x (assoc (get elt-map x) :parent canonical))
+       :else (let [[_ canonical] (get-canonical this parent)]
+               (do (if (mutable-node? node)
+                     (set-parent! node canonical)
+                     (set! elt-map (assoc! elt-map x (->MutableUFNode (value node) (rank node) canonical true))))
                    [this canonical])))))
   (union [this x y]
     (throw (java.lang.UnsupportedOperationException "Use union! on transients")))
@@ -176,26 +220,36 @@ sets that x and y belong to unioned."))
   (union! [this x y]
     (let [[_ x-root] (get-canonical this x)
           [_ y-root] (get-canonical this y)
-          x-rank (:rank (elt-map x-root))
-          y-rank (:rank (elt-map y-root))]
+          x-node (elt-map x-root)
+          y-node (elt-map y-root)
+          x-rank (when x-node (rank x-node))
+          y-rank (when y-node (rank y-node))]
       (cond (or (nil? x-root) ;; no-op - either the input doesn't exist in the
                 (nil? y-root) ;; universe, or the two inputs are already unioned
                 (= x-root y-root)) this
             (< x-rank y-rank)
             (do
-              (assoc! elt-map x-root (assoc (get elt-map x-root) :parent y-root))
-              (set! num-sets (- num-sets 1))
+              (if (mutable-node? x-node)
+                (set-parent! x-node y-root)
+                (set! elt-map (assoc! elt-map x-root (->MutableUFNode (value x-node) (rank x-node) y-root true))))
+              (set! num-sets (dec num-sets))
               this)
             (< y-rank x-rank)
             (do
-              (assoc! elt-map y-root (assoc (get elt-map y-root) :parent x-root))
-              (set! num-sets (- num-sets 1))
+              (if (mutable-node? y-node)
+                (set-parent! y-node x-root)
+                (set! elt-map (assoc! elt-map y-root (->MutableUFNode (value y-node) (rank y-node) x-root true))))
+              (set! num-sets (dec num-sets))
               this)
             :else
             (do
-              (assoc! elt-map y-root (assoc (elt-map y-root) :parent x-root))
-              (assoc! elt-map x-root (assoc (elt-map x-root) :rank (inc x-rank)))
-              (set! num-sets (- num-sets 1))
+              (if (mutable-node? y-node)
+                (set-parent! y-node x-root)
+                (set! elt-map (assoc! elt-map y-root (->MutableUFNode (value y-node) (rank y-node) x-root true))))
+              (if (mutable-node? x-node)
+                (set-rank! x-node (inc x-rank))
+                (set! elt-map (assoc! elt-map x-root (->MutableUFNode (value x-node) (inc x-rank) (parent x-node) true))))
+              (set! num-sets (dec num-sets))
               this)))))
 
 (def ^:private empty-union-find (->PersistentDSF {} 0 {}))

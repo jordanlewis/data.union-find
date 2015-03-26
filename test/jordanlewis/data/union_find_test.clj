@@ -1,6 +1,7 @@
 (ns jordanlewis.data.union-find-test
   (:use clojure.test
-        jordanlewis.data.union-find))
+        jordanlewis.data.union-find)
+  (:require dev-utils))
 
 (deftest test-union-find
   (let [set (-> (union-find 1 2 3 4 5 6)
@@ -58,6 +59,12 @@
       (is (= nil (set 10)))
       (is (= :not-found (set 10 :not-found))))
 
+    (testing "partitions large dataset correctly"
+      (let [uf (dev-utils/partition-graph (union-find) 10 100 conj union)]
+        (is (= (count uf) 10))
+        (doseq [[a b c] (dev-utils/make-stars 10 100)]
+          (is (= (uf a) (uf b) (uf c))))))
+
     (testing "supports meta"
       (is (= {:with :meta} (meta (with-meta set {:with :meta})))))
 
@@ -74,6 +81,19 @@
                                   (union 1 2)
                                   (union 3 4)
                                   (union 4 5)))]
+    (testing "equal to persistent"
+      (is (= (dev-utils/partition-graph (union-find) 10 100 conj union)
+             (persistent! (dev-utils/partition-graph (transient (union-find)) 10 100 conj! union!)))))
+
+    (testing "no nodes are mutable after persistent! call"
+      ; this checks whether changes to transient v3 have leaked into persistent v2
+      (let [baseline (dev-utils/partition-graph (union-find) 2 2 conj union)
+            v1 (dev-utils/partition-graph (transient (union-find)) 2 2 conj! union!)
+            v2 (persistent! v1)
+            v3 (transient v2)]
+        (is (= baseline v2))
+        (union! v3 1 2)
+        (is (= baseline v2))))
     (testing "Missing elements have nil leaders."
       (let [set (transient (union-find 1 2 3))]
         (is (= [set nil] (get-canonical set 10)))))
@@ -146,11 +166,8 @@
             set-2 (transient (-> (union-find 1 2 3 4 5 6)
                 (union 1 2)
                 (union 3 4)
-                (union 4 5)))
-            ]
-        (is (not= set-1 set-2))
-        )
-        )
+                (union 4 5)))]
+        (is (not= set-1 set-2))))
     (testing "unioning a missing element is a no-op."
       (is (= master-set (union! master-set 5 10))))
     )
