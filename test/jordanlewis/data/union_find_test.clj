@@ -84,6 +84,16 @@
     (testing "equal to persistent"
       (is (= (dev-utils/partition-graph (union-find) 10 100 conj union)
              (persistent! (dev-utils/partition-graph (transient (union-find)) 10 100 conj! union!)))))
+
+    (testing "no nodes are mutable after persistent! call"
+      ; this checks whether changes to transient v3 have leaked into persistent v2
+      (let [baseline (dev-utils/partition-graph (union-find) 2 2 conj union)
+            v1 (dev-utils/partition-graph (transient (union-find)) 2 2 conj! union!)
+            v2 (persistent! v1)
+            v3 (transient v2)]
+        (is (= baseline v2))
+        (union! v3 1 2)
+        (is (= baseline v2))))
     (testing "Missing elements have nil leaders."
       (let [set (transient (union-find 1 2 3))]
         (is (= [set nil] (get-canonical set 10)))))
@@ -156,11 +166,8 @@
             set-2 (transient (-> (union-find 1 2 3 4 5 6)
                 (union 1 2)
                 (union 3 4)
-                (union 4 5)))
-            ]
-        (is (not= set-1 set-2))
-        )
-        )
+                (union 4 5)))]
+        (is (not= set-1 set-2))))
     (testing "unioning a missing element is a no-op."
       (is (= master-set (union! master-set 5 10))))
     )
