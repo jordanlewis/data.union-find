@@ -73,7 +73,9 @@ sets that x and y belong to unioned."))
   ;; prints out a map from canonical element to elements unioned to that element.
   (toString [this] (str (group-by this (keys elt-map))))
   (hashCode [this] (.hashCode elt-map))
-  (equals [this that] (or (identical? this that) (.equals elt-map (.elt-map that))))
+  (equals [this that] (or (identical? this that)
+                          (and (instance? PersistentDSF that)
+                               (.equals elt-map (.elt-map that)))))
 
   clojure.lang.Seqable
   ;; seq returns each of the canonical elements, not all of the elements
@@ -165,10 +167,6 @@ sets that x and y belong to unioned."))
 (deftype TransientDSF [^:unsynchronized-mutable elt-map
                        ^:unsynchronized-mutable num-sets
                        meta]
-  Object
-  ;; prints out a map from canonical element to elements unioned to that element.
-  (toString [this] (str (group-by this (keys elt-map))))
-
   clojure.lang.Counted
   (count [this] num-sets)
 
