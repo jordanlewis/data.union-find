@@ -80,7 +80,7 @@ sets that x and y belong to unioned."))
   clojure.lang.Seqable
   ;; seq returns each of the canonical elements, not all of the elements
   (seq [this]
-    (map first (filter (comp nil? parent val) elt-map)))
+    (map key (filter (comp nil? parent val) elt-map)))
 
   clojure.lang.IPersistentCollection
   ;; cons adds the input to a new singleton set
@@ -157,11 +157,9 @@ sets that x and y belong to unioned."))
                                 (update-in elt-map [y-root] #(->UFNode (value %) (rank %) x-root))
                                 num-sets _meta)
             :else (PersistentDSF.
-                    (-> elt-map
-                        (transient)
-                        (assoc! y-root (->UFNode (value y-node) (rank y-node) x-root))
-                        (assoc! x-root (->UFNode (value x-node) (inc x-rank) (parent x-node)))
-                        (persistent!))
+                    (assoc elt-map
+                           y-root (->UFNode (value y-node) (rank y-node) x-root)
+                           x-root (->UFNode (value x-node) (inc x-rank) (parent x-node)))
                     num-sets _meta)))))
 
 (deftype TransientDSF [^:unsynchronized-mutable elt-map
