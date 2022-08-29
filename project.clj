@@ -3,8 +3,8 @@
             :url "http://github.com/jordanlewis/data.union-find"
             :license {:name "Eclipse Public License"
                       :url "http://www.eclipse.org/legal/epl-v10.html"}
-            :dependencies [[org.clojure/clojure "1.6.0"]]
+            :dependencies [[org.clojure/clojure "1.11.1"]]
 
             :profiles
             {:dev {:source-paths      ["src" "dev"]
-                   :dependencies [[criterium "0.4.3"]]}})
+                   :dependencies [[criterium "0.4.6"]]}})

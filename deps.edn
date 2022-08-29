@@ -1,0 +1,9 @@
+{:paths   ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}}
+ :aliases
+ {:test
+  {:extra-paths ["dev" "test"]
+   :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]}
+  :dev
+  {:extra-paths ["dev"]
+   :extra-deps {criterium/criterium {:mvn/version "0.4.6"}}}}}
