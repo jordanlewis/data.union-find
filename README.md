@@ -3,9 +3,7 @@
 A Clojure implementation of persistent disjoint-set forests using Tarjan's
 union-find algorithm.
 
-Available in Leiningen via [Clojars](https://clojars.org/org.jordanlewis/data.union-find):
-
-    [org.jordanlewis/data.union-find "0.1.0"]
+    com.github.pangloss/data.union-find {:git/tag "0.1.2" :sha "0e8a06f"}
 
 ## Usage
 
