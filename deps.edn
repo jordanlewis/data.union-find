@@ -1,9 +1,14 @@
 {:paths   ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}}
+ :deps {org.clojure/clojure {:mvn/version "1.11.3"}}
  :aliases
  {:test
   {:extra-paths ["dev" "test"]
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]}
   :dev
   {:extra-paths ["dev"]
-   :extra-deps {criterium/criterium {:mvn/version "0.4.6"}}}}}
+   :extra-deps {criterium/criterium {:mvn/version "0.4.6"}}}
+  :build
+  ;; build.clj tool.
+  {:deps {io.github.clojure/tools.build {:git/tag "v0.10.3" :git/sha "15ead66"}
+          slipset/deps-deploy {:mvn/version "0.2.0"}}
+   :ns-default build}}}
