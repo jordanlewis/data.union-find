@@ -3,11 +3,8 @@
 A Clojure implementation of persistent disjoint-set forests using Tarjan's
 union-find algorithm.
 
-    com.github.jordanlewis/data.union-find {:git/tag "1.0.0" :sha "0e8a06f"}
+    com.github.pangloss/data.union-find {:mvn/version "1.0.66"}
     
-This is not currently released on Clojars. If someone needs that, please put in
-a ticket and it can be done.
-
 This library is stable and I do not currently anticipate any changes.
 
 ## Usage
